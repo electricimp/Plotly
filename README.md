@@ -18,7 +18,7 @@ Let *worldReadable* be true if you would like this graph to be accessible to any
 
 Let *traces* be a list of the data point names you would like to graph.  Each Plotly graph can display many concurrent values known as traces, but you must list them all here before plotting them.
 
-```
+```squirrel
 myPlot <- Plot("<YOUR_USERNAME>", "<YOUR_API_KEY>", "weather_data", true, ["temperature", "inside_humidity", "outside_humidity"]);
 ```
 
@@ -27,7 +27,7 @@ myPlot <- Plot("<YOUR_USERNAME>", "<YOUR_API_KEY>", "weather_data", true, ["temp
 
 Returns a string with the URL of the graph that this object generates.  Note that if *worldReadable* was set to false in the constructor, this link will only be viewable when logged into Plotly.
 
-```
+```squirrel
 local plotUrl = myPlot.getUrl();
 ```
 
@@ -35,7 +35,7 @@ local plotUrl = myPlot.getUrl();
 
 Sets the title that will be displayed on this graph.
 
-```
+```squirrel
 myPlot.setTitle("Weather at Station 7");
 ```
 
@@ -43,7 +43,7 @@ myPlot.setTitle("Weather at Station 7");
 
 Sets the labels that will be applied to the standard x- and y-axes on this graph.  If either argument is null or empty, that axis title will not be changed.
 
-```
+```squirrel
 myPlot.setAxisTitles("Time", "Temperature (°F)");
 ```
 
@@ -51,7 +51,7 @@ myPlot.setAxisTitles("Time", "Temperature (°F)");
 
 Adds a second y-axis on the right side of the graph and assigns the specified traces to it.  *trace1* and all following arguments should be the string names of traces as passed in the *traces* argument to the constructor.
 
-```
+```squirrel
 myPlot.addSecondYAxis("Humidity (%)", "inside_humidity", "outside_humidity");
 ```
 
@@ -66,7 +66,7 @@ Note that there are several caveats to using this method:
 - This will entirely overwrite style parameters previously set using methods like `AddSecondAxis` or `setStyleDirectly`.
 - If there is an error in formatting *styleTable*, an error may be printed to the console or the call may silently fail.
 
-```
+```squirrel
 local style =
 [
     {
@@ -91,7 +91,7 @@ See documentation for `setStyleDirectly`.
 
 Appends data to the Plotly graph.  This method takes an arbitrary number of *dataObj*'s, which are Squirrel tables in the following form:
 
-```
+```squirrel
 {
     "name" : <TRACE_NAME>,
     "x" : [<X_VALUE_1, X_VALUE_2, ...>],
@@ -104,7 +104,7 @@ Note that the "x", "y", and "z" fields hold arrays of integers or strings and th
 
 Each *dataObj* must have a name field that corresponds to a trace name as passed into the constructor.  To add multiple data points to a trace, either add them to the traces data arrays or make multiple calls to this method.
 
-```
+```squirrel
 myPlot.post(
     {
         "name" : "temperature",
