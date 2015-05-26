@@ -29,7 +29,6 @@ class Plotly {
     _worldReadable = null;
     _persistentLayout = null;
     _persistentStyle = null;
-    _hack_sent_first_plot = null;
 
     
     function constructor(username, userKey,
@@ -53,7 +52,6 @@ class Plotly {
                 "name" : trace  
             });
         };
-        _hack_sent_first_plot = false; 
 
         _makeApiCall(PlotlyMessageType.plot, plotlyInput, callback);
     }
@@ -64,7 +62,6 @@ class Plotly {
     
     function post(dataObjs, callback = null) {;
         _makeApiCall(PlotlyMessageType.plot, dataObjs, callback);
-        _hack_sent_first_plot = true; 
     }
     
     function setTitle(title, callback = null) {
@@ -93,20 +90,22 @@ class Plotly {
                     trace["yaxis"] <- "y2";
                 }
             }
-            _makeApiCall(PlotlyMessageType.layout, _persistentLayout, callback);
-            setStyleDirectly(_persistentStyle, callback);
+            _makeApiCall(PlotlyMessageType.layout, _persistentLayout, 
+                function(response1, plot){
+                    setStyleDirectly(_persistentStyle, function(response2, plot) {
+                        if(callback != null){
+                            local returnedResponse = 
+                                response1.statuscode > response2.statuscode ? 
+                                response1 : response2;
+                            callback(returnedResponse, plot);
+                        }
+                    });
+                });
     }
     
     function setStyleDirectly(styleTable, callback = null) {
         _persistentStyle = styleTable;
-        if(_hack_sent_first_plot) {
-            _makeApiCall(PlotlyMessageType.style, _persistentStyle, callback);
-        } else {
-            local makeCallFunction = function() {
-                _makeApiCall(PlotlyMessageType.style, _persistentStyle, callback);
-            };
-            imp.wakeup(1, makeCallFunction.bindenv(this));
-        }
+        _makeApiCall(PlotlyMessageType.style, _persistentStyle, callback);
     }
     
     function setLayoutDirectly(layoutTable, callback = null) {
