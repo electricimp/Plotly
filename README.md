@@ -1,8 +1,8 @@
 # Plotly
 
-This library wraps the [Plotly REST API] (https://plot.ly/rest/), allowing you to graph and style data obtained from Imp-connected sensors.
+This library wraps the [Plotly](https://plot.ly/) [REST API] (https://plot.ly/rest/), allowing you to graph and style data obtained from Imp-connected sensors.
 
-This class allows for simple creation of time-series data graphs while exposing access for styling graphs using all features of the Plotly API.
+This class allows for simple creation of time-series data graphs while exposing access for styling graphs using all features of the Plotly API.  Note that this library requires creation of a Plotly account.
 
 ### Callbacks
 Almost all methods in this class (including the constructor) take an optional *callback* argument.
