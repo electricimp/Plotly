@@ -118,6 +118,20 @@ myPlot.post(
     });
 ```
 
+## Plotly.getPlotlyTimestamp()
+
+Returns a timestamp string that Plotly will automatically recognize and style correctly.  Use this for your x-value on time-series data.
+
+```squirrel
+local timestamp = myPlot.getPlotlyTimestamp();
+myPlot.post(
+{
+    "name" : "temperature",
+    "x" : [timestamp],
+    "y" : [latest_temperature]
+});
+```
+
 ## License
 
 The Plotly library is licensed under the [MIT License](./LICENSE).
