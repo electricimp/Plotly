@@ -2,9 +2,15 @@
 
 This library wraps the [Plotly REST API] (https://plot.ly/rest/), allowing you to graph and style data obtained from Imp-connected sensors.
 
-This class allows for simple creation of time-series data graphs while exposing access for styling graphs using all features of the Plotly API.  It also handles logging messages and errors returned by the Plotly API.
+This class allows for simple creation of time-series data graphs while exposing access for styling graphs using all features of the Plotly API.
 
-## Constructor: Plotly(*userName, userKey, FileName, worldReadable, traces*)
+### Callbacks
+Almost all methods in this class (including the constructor) take an optional *callback* argument.
+This is a function that takes arguments *response* and *plot*, where *response* is a table representing a response from the Plotly servers and *plot* is a reference to the plot object.  The *response* object mirrors that provided in the callback to [httprequest.sendasync()](https://electricimp.com/docs/api/httprequest/sendasync/) with the addition of a *decoded* field that contains the JSON body of the response in a Squirrel table.
+
+**Note that while the constructor will return immediately, it is only safe to operate on the resulting object once the callback has been called.**  The *plot* argument to the callback is provided for this purpose.  It is also the user's responsibility to ensure at this step that the construction has succeeded by checking the HTTP response code and/or Plotly response messages.
+
+## Constructor: Plotly(*userName, userKey, FileName, worldReadable, traces [, callback]*)
 
 To create a plot, you need to call the constructor with your Plotly authentication information and some basic data about the new graph.
 
@@ -19,11 +25,16 @@ Let *worldReadable* be true if you would like this graph to be accessible to any
 Let *traces* be a list of the data point names you would like to graph.  Each Plotly graph can display many concurrent values known as traces, but you must list them all here before plotting them.
 
 ```squirrel
-myPlot <- Plot("<YOUR_USERNAME>", "<YOUR_API_KEY>", "weather_data", true, ["temperature", "inside_humidity", "outside_humidity"]);
+local callback = function(response, plot){
+    server.log(response.body);
+    server.log("See plot at " + plot.getUrl());
+}
+myPlot <- Plot("<YOUR_USERNAME>", "<YOUR_API_KEY>", "weather_data", true, ["temperature", "inside_humidity", "outside_humidity"], callback);
 ```
 
+## Class Methods
 
-## Plotly.getUrl()
+## plot.getUrl()
 
 Returns a string with the URL of the graph that this object generates.  Note that if *worldReadable* was set to false in the constructor, this link will only be viewable when logged into Plotly.
 
@@ -31,7 +42,7 @@ Returns a string with the URL of the graph that this object generates.  Note tha
 local plotUrl = myPlot.getUrl();
 ```
 
-## Plotly.setTitle(*title*)
+## plot.setTitle(*title [, callback]*)
 
 Sets the title that will be displayed on this graph.
 
@@ -39,7 +50,7 @@ Sets the title that will be displayed on this graph.
 myPlot.setTitle("Weather at Station 7");
 ```
 
-## Plotly.setAxisTitles(*xAxisTitle, yAxisTitle*)
+## plot.setAxisTitles(*xAxisTitle, yAxisTitle*)
 
 Sets the labels that will be applied to the standard x- and y-axes on this graph.  If either argument is null or empty, that axis title will not be changed.
 
@@ -47,15 +58,15 @@ Sets the labels that will be applied to the standard x- and y-axes on this graph
 myPlot.setAxisTitles("Time", "Temperature (°F)");
 ```
 
-## Plotly.addSecondYAxis(*axisTitle, trace1, ...*)
+## plot.addSecondYAxis(*axisTitle, traces [, callback]*)
 
-Adds a second y-axis on the right side of the graph and assigns the specified traces to it.  *trace1* and all following arguments should be the string names of traces as passed in the *traces* argument to the constructor.
+Adds a second y-axis on the right side of the graph and assigns the specified traces to it.  *traces* should be a list of the string names of traces as passed in the *traces* argument to the constructor.
 
 ```squirrel
-myPlot.addSecondYAxis("Humidity (%)", "inside_humidity", "outside_humidity");
+myPlot.addSecondYAxis("Humidity (%)", ["inside_humidity", "outside_humidity"]);
 ```
 
-## Plotly.setStyleDirectly(*styleTable*)
+## plot.setStyleDirectly(*styleTable [, callback]*)
 
 Sets the style of the graph by passing a description directly to the Plotly API.  This allows for advanced styling options that this library does not have specific methods for.
 
@@ -83,13 +94,13 @@ local style =
 myPlot.setStyleDirectly(style);
 ```
 
-## Plotly.setLayoutDirectly(*layoutTable*)
+## Plotly.setLayoutDirectly(*layoutTable [,callback]*)
 
 See documentation for `setStyleDirectly`.
 
-## Plotly.plot(*dataObj1, ...*)
+## Plotly.plot(*dataObjs [, callback]*)
 
-Appends data to the Plotly graph.  This method takes an arbitrary number of *dataObj*'s, which are Squirrel tables in the following form:
+Appends data to the Plotly graph.  This method takes an array *dataObjs* of Squirrel tables in the following form:
 
 ```squirrel
 {
@@ -102,10 +113,10 @@ Appends data to the Plotly graph.  This method takes an arbitrary number of *dat
 
 Note that the "x", "y", and "z" fields hold arrays of integers or strings and the "z" field is optional.
 
-Each *dataObj* must have a name field that corresponds to a trace name as passed into the constructor.  To add multiple data points to a trace, either add them to the traces data arrays or make multiple calls to this method.
+Each element in *dataObjs* must have a name field that corresponds to a trace name as passed into the constructor.  To add multiple data points to a trace, either add them to the traces data arrays or make multiple calls to this method.
 
 ```squirrel
-myPlot.post(
+myPlot.post([
     {
         "name" : "temperature",
         "x" : [timestamp],
@@ -115,8 +126,11 @@ myPlot.post(
         "name" : "inside_humidity",
         "x" : [timestamp],
         "y" : [latest_humidity]
-    });
+    }
+]);
 ```
+
+## Static Methods
 
 ## Plotly.getPlotlyTimestamp()
 

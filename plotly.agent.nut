@@ -22,19 +22,20 @@ class Plotly {
         layout = "layout"
     }
 
-
-    _filename = "";
-    _url = "";
-    _username = "";
-    _userKey = "";
-    _filename = "";
-    _worldReadable = false;
+    _url = null;
+    _username = null;
+    _userKey = null;
+    _filename = null;
+    _worldReadable = null;
     _persistentLayout = null;
     _persistentStyle = null;
-    _hack_sent_first_plot = false; 
+    _hack_sent_first_plot = null;
 
     
-    function constructor(username, userKey, filename, worldReadable, traces) {
+    function constructor(username, userKey,
+                         filename, worldReadable, traces, 
+                         callback = null) {
+        _url = "";
         _username = username;
         _userKey = userKey;
         _filename = filename;
@@ -52,84 +53,70 @@ class Plotly {
                 "name" : trace  
             });
         };
-        _makeApiCall(PlotlyMessageType.plot, plotlyInput, true);
+        _hack_sent_first_plot = false; 
+
+        _makeApiCall(PlotlyMessageType.plot, plotlyInput, callback);
     }
     
     function getUrl() {
         return _url;
     }
     
-    // Each dataObj is a table with the following fields:
-    // name - A string representing the trace name.
-    // x - A numeric or string array representing x-values.
-    // y - A numeric or string array representing y-values.
-    // z - A numeric or string array representing z-values. Optional.
-    function post(dataObj1, ...) {
-        local plotlyInput = vargv;
-        plotlyInput.insert(0, dataObj1);
-        _makeApiCall(PlotlyMessageType.plot, plotlyInput);
+    function post(dataObjs, callback = null) {;
+        _makeApiCall(PlotlyMessageType.plot, dataObjs, callback);
         _hack_sent_first_plot = true; 
     }
     
-    function setTitle(title) {
+    function setTitle(title, callback = null) {
         _persistentLayout["title"] <- title;
-        _makeApiCall(PlotlyMessageType.layout, _persistentLayout);
+        _makeApiCall(PlotlyMessageType.layout, _persistentLayout, callback);
     }
     
-    function setAxisTitles(xAxisTitle, yAxisTitle) {
+    function setAxisTitles(xAxisTitle, yAxisTitle, callback = null) {
         if(xAxisTitle != null && xAxisTitle.len() > 0) {
             _persistentLayout["xaxis"]["title"] <- xAxisTitle;
         }
         if(yAxisTitle != null && yAxisTitle.len() > 0) {
             _persistentLayout["yaxis"]["title"] <- yAxisTitle;
         }
-        _makeApiCall(PlotlyMessageType.layout, _persistentLayout);
+        _makeApiCall(PlotlyMessageType.layout, _persistentLayout, callback);
     }
     
-    // trace1, etc. should be the names of traces that will use the new axis.
-    function addSecondYAxis(axisTitle, trace1, ...) {
+    function addSecondYAxis(axisTitle, traces, callback = null) {
             _persistentLayout["yaxis2"] <-  {
                                                 "title" : axisTitle,
                                                 "side" : "right",
                                                 "overlaying" : "y"
                                             };
-            local affectedTraces = vargv;
-            affectedTraces.append(trace1);
             foreach(trace in _persistentStyle) {
-                if(affectedTraces.find(trace["name"]) != null) {
+                if(traces.find(trace["name"]) != null) {
                     trace["yaxis"] <- "y2";
                 }
             }
-            _makeApiCall(PlotlyMessageType.layout, _persistentLayout);
-            setStyleDirectly(_persistentStyle);
+            _makeApiCall(PlotlyMessageType.layout, _persistentLayout, callback);
+            setStyleDirectly(_persistentStyle, callback);
     }
     
-    // See the Plotly API docs at https://plot.ly/rest/ for details on how to 
-    // format styleTable.  Note that this will overwrite any previously set 
-    // style options (e.g. from AddSecondAxis).
-    function setStyleDirectly(styleTable) {
+    function setStyleDirectly(styleTable, callback = null) {
         _persistentStyle = styleTable;
         if(_hack_sent_first_plot) {
-            _makeApiCall(PlotlyMessageType.style, _persistentStyle);
+            _makeApiCall(PlotlyMessageType.style, _persistentStyle, callback);
         } else {
             local makeCallFunction = function() {
-                _makeApiCall(PlotlyMessageType.style, _persistentStyle);
+                _makeApiCall(PlotlyMessageType.style, _persistentStyle, callback);
             };
-            imp.wakeup(2, makeCallFunction.bindenv(this));
+            imp.wakeup(1, makeCallFunction.bindenv(this));
         }
     }
     
-    // See the Plotly API docs at https://plot.ly/rest/ for details on how to 
-    // format layoutTable.  Note that this will overwrite any previously set
-    // layout options (e.g. from setTitle or setAxisTitles).
-    function setLayoutDirectly(layoutTable) {
+    function setLayoutDirectly(layoutTable, callback = null) {
         _persistentLayout = layoutTable;
-        _makeApiCall(PlotlyMessageType.layout, _persistentLayout);
+        _makeApiCall(PlotlyMessageType.layout, _persistentLayout, callback);
     }
     
 
     /******************** PRIVATE FUNCTIONS (DO NOT CALL) ********************/
-    function _makeApiCall(type, requestArgs, synchronous = false) {
+    function _makeApiCall(type, requestArgs, userCallback) {
         local requestKwargs = {
                 "filename" : _filename,
                 "fileopt" : "extend",
@@ -150,32 +137,23 @@ class Plotly {
         
         local requestCallback = function(response) {
             if(response.statuscode == 200) {
-                local responseTable = http.jsondecode(response.body);
-                if(responseTable.url.len() > 0) {
-                    _url = responseTable.url;
+                local responseTable = null;
+                try{
+                    responseTable = http.jsondecode(response.body);
+                    if(responseTable.url.len() > 0) {
+                        _url = responseTable.url;
+                    }
+                } catch(exception){
+                    server.error("Could not decode Plotly response.");
                 }
-                if(responseTable.message.len() > 0) {
-                    server.log("Plotly message: " + responseTable.message);
-                }
-                if(responseTable.warning.len() > 0) {
-                    server.log("Plotly warning: " + responseTable.warning);
-                }
-                if(responseTable.error.len() > 0) {
-                    server.log("Plotly error: " + responseTable.error);
-                }
-            } else {
-                server.log("Error sending request: code "
-                + statuscode
-                + "\n" + response.body);
+                response["decoded"] <- responseTable;
+            }
+            if(userCallback != null){
+                userCallback(response, this);
             }
         };
         
-        if(synchronous) {
-            local response = request.sendsync();
-            requestCallback(response);
-        } else {
-            request.sendasync(requestCallback.bindenv(this));
-        }
+        request.sendasync(requestCallback.bindenv(this));
     }
 }
 
@@ -183,15 +161,18 @@ class Plotly {
 
 function postToPlotly(reading) {
     local timestamp = plot1.getPlotlyTimestamp();
-    plot1.post(
+    plot1.post([
         {
             "name" : "temperature",
             "x" : [timestamp],
             "y" : [reading["temp"]]
-        });
+        }
+    ]);
 }
 
-device.on("reading", postToPlotly);
+local  callback = function(response, plot){    
+    server.log("See plot at " + plot.getUrl());
+    device.on("reading", postToPlotly);
+}
 
-plot1 <- Plotly("my_name", "my_api_key", "my_file_name", true, ["temperature"]);
-server.log("See plot at " + plot1.getUrl());
+plot1 <- Plotly("my_name", "my_api_key", "my_file_name", true, ["temperature"], callback);
