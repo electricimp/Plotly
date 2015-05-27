@@ -151,3 +151,80 @@ class Plotly {
         request.sendasync(requestCallback.bindenv(this));
     }
 }
+
+function loggerCallback(response, plot){
+        server.log(response.body);
+    }
+
+function postToPlotly(reading) {
+    local timestamp = plot1.getPlotlyTimestamp();
+    plot1.post([
+        {
+            "name" : "Temperature",
+            "x" : [timestamp],
+            "y" : [reading["temp"]]
+        },
+        {
+            "name" : "Pressure",
+            "x" : [timestamp],
+            "y" : [reading["pressure"]]
+        },
+        {
+            "name" : "Humidity",
+            "x" : [timestamp],
+            "y" : [reading["humid"]]
+        },
+        {
+            "name" : "Lux",
+            "x" : [timestamp],
+            "y" : [reading["lux"]]
+        }], loggerCallback);
+}
+
+server.log("Rebooting");
+local constructorCallback = function(response, plot){
+    
+    device.on("reading", postToPlotly);
+
+    plot.setTitle("Env Tail Data", function(response, plot){
+        plot.setAxisTitles("time", "Climate", function(response, plot){
+            local style =
+            [
+                {
+                    "name" : "Temperature",
+                    "type": "scatter",
+                    "marker": {"symbol": "square", "color": "purple"}
+                    
+                },
+                {
+                    "name" : "Pressure",
+                    "type": "scatter",
+                    "marker": {"symbol": "circle", "color": "red"}
+                    
+                },
+                {
+                    "name" : "Humidity",
+                    "type": "scatter", 
+                    "marker": {"symbol": "square", "color": "blue"}
+                    
+                },
+                {
+                    "name" : "Lux",
+                    "type": "scatter",
+                    "marker": {"symbol": "triangle", "color": "green"}
+                    
+                }
+            ];
+            plot.setStyleDirectly(style, function(response, plot){
+                plot.addSecondYAxis("Light", ["Lux"], function(response, plot){
+                    server.log("See plot at " + plot.getUrl()); 
+                });
+            });
+        });
+        
+    });
+}
+
+local traces = ["Temperature", "Pressure", "Humidity", "Lux"];
+plot1 <- Plotly("my_name", "my_api_key", "my_file_name", 
+                true, traces, constructorCallback);

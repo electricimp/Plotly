@@ -4,6 +4,10 @@ This library wraps the [Plotly](https://plot.ly/) [REST API] (https://plot.ly/re
 
 This class allows for simple creation of time-series data graphs while exposing access for styling graphs using all features of the Plotly API.  Note that this library requires creation of a Plotly account.
 
+### Examples
+
+To see working examples of this library's in use, look at the [Fully-Featured](examples/full_featured) and [Minimal](examples/minimal) Plotly projects.
+
 ### Callbacks
 Almost all methods in this class (including the constructor) take an optional *callback* argument.
 This is a function that takes arguments *response* and *plot*, where *response* is a table representing a response from the Plotly servers and *plot* is a reference to the plot object.  The *response* object mirrors that provided in the callback to [httprequest.sendasync()](https://electricimp.com/docs/api/httprequest/sendasync/) with the addition of a *decoded* field that contains the JSON body of the response in a Squirrel table.

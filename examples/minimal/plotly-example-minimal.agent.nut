@@ -151,3 +151,19 @@ class Plotly {
         request.sendasync(requestCallback.bindenv(this));
     }
 }
+
+function postToPlotly(reading) {
+    local timestamp = plot1.getPlotlyTimestamp();
+    plot1.post([
+        {
+            "name" : "Temperature",
+            "x" : [timestamp],
+            "y" : [reading["temp"]]
+        }
+    ]);
+}
+
+plot1 <- Plotly("my_name", "my_api_key", "my_file_name", true, ["Temperature"], function(response, plot){
+    device.on("reading", postToPlotly);
+    server.log("See plot at " + plot.getUrl());               
+});
