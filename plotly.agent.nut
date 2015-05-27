@@ -4,8 +4,8 @@
 
 class Plotly {
     
-    static function getPlotlyTimestamp(timestamp = null) {
-        local timestamp = timestamp == null ? date() : date(timestamp);
+    static function getPlotlyTimestamp(providedTimestamp = null) {
+        local timestamp = providedTimestamp == null ? date() : date(providedTimestamp);
         return format("%04i-%02i-%02i %02i:%02i:%02i",
             timestamp.year, timestamp.month, timestamp.day,
             timestamp.hour, timestamp.min, timestamp.sec);
