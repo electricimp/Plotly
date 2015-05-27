@@ -139,9 +139,11 @@ myPlot.post([
 
 ## Static Methods
 
-## Plotly.getPlotlyTimestamp()
+## Plotly.getPlotlyTimestamp([timestamp])
 
 Returns a timestamp string that Plotly will automatically recognize and style correctly.  Use this for your x-value on time-series data.
+
+If the *timestamp* argument is provided as a Unix timestamp, this function will output the formatted timestamp corresponding to it.
 
 ```squirrel
 local timestamp = Plotly.getPlotlyTimestamp();

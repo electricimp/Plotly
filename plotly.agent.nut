@@ -4,10 +4,8 @@
 
 class Plotly {
     
-    // Use this function to get a timestamp that Plotly will automatically 
-    // recognize and style correctly.
-    static function getPlotlyTimestamp() {
-        local timestamp = date();
+    static function getPlotlyTimestamp(timestamp = null) {
+        local timestamp = timestamp == null ? date() : date(timestamp);
         return format("%04i-%02i-%02i %02i:%02i:%02i",
             timestamp.year, timestamp.month, timestamp.day,
             timestamp.hour, timestamp.min, timestamp.sec);
