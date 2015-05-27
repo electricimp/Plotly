@@ -14,7 +14,7 @@ This is a function that takes arguments *response* and *plot*, where *response* 
 
 To create a plot, you need to call the constructor with your Plotly authentication information and some basic data about the new graph.
 
-To find your *userName* and *userKey*, go to the Plotly settings and copy the Username and API key as highlighted below.  Note that the *userKey* is **not** your password, but is an API key that Plotly provides for developers.  Whenever you cycle your API key (e.g. by clicking "Generate a new key"), you will have to update this value in your code as well.
+To find your *userName* and *userKey*, go to the Plotly [API settings page](https://plot.ly/settings/api) and copy the Username and API key as highlighted below.  Note that the *userKey* is **not** your password, but is an API key that Plotly provides for developers.  Whenever you cycle your API key (e.g. by clicking "Generate a new key"), you will have to update this value in your code as well.
 
 ![Plotly settings screenshot] (images/plotly_user_settings.png)
 
@@ -75,7 +75,7 @@ Sets the style of the graph by passing a description directly to the Plotly API.
 Note that there are several caveats to using this method:
 
 - This will entirely overwrite style parameters previously set using methods like `AddSecondAxis` or `setStyleDirectly`.
-- If there is an error in formatting *styleTable*, an error may be printed to the console or the call may silently fail.
+- If there is an error in formatting *styleTable*, an error may be passed to *callback* or the call may silently fail.
 
 ```squirrel
 local style =
@@ -94,9 +94,16 @@ local style =
 myPlot.setStyleDirectly(style);
 ```
 
-## Plotly.setLayoutDirectly(*layoutTable [,callback]*)
+## Plotly.setLayoutDirectly(*layoutTable [, callback]*)
 
-See documentation for `setStyleDirectly`.
+Sets the layout of the graph by passing a description directly to the Plotly API.  This allows for advanced layout options that this library does not have specific methods for.
+
+*layoutTable* should be a Squirrel list or table that will be parsed into JSON.  See the [Plotly API docs] (https://plot.ly/rest/) for details on how to format this argument.
+
+Note that there are several caveats to using this method:
+
+- This will entirely overwrite layout parameters previously set using methods like `AddSecondAxis`, `setTitle`, or `setLayoutDirectly`.
+- If there is an error in formatting *layoutTable*, an error may be passed to *callback* or the call may silently fail.
 
 ## Plotly.plot(*dataObjs [, callback]*)
 
@@ -137,7 +144,7 @@ myPlot.post([
 Returns a timestamp string that Plotly will automatically recognize and style correctly.  Use this for your x-value on time-series data.
 
 ```squirrel
-local timestamp = myPlot.getPlotlyTimestamp();
+local timestamp = Plotly.getPlotlyTimestamp();
 myPlot.post(
 {
     "name" : "temperature",
