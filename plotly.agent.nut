@@ -38,6 +38,7 @@ class Plotly {
         _persistentLayout = {"xaxis" : {}, "yaxis" : {}};
         _persistentStyle = [];
         local plotlyInput = [];
+        // Setup blank traces to be appended to later
         foreach(trace in traces) {
             plotlyInput.append({
                 "x" : [],
@@ -81,11 +82,13 @@ class Plotly {
                                                 "side" : "right",
                                                 "overlaying" : "y"
                                             };
+            // Search for requested traces in style table
             foreach(trace in _persistentStyle) {
                 if(traces.find(trace["name"]) != null) {
                     trace["yaxis"] <- "y2";
                 }
             }
+            // Since this requires two API calls, pass the "worse" response into the user callback
             _makeApiCall(MESSAGETYPE_PLOT, _persistentLayout, 
                 function(response1, plot){
                     setStyleDirectly(_persistentStyle, function(response2, plot) {
@@ -100,11 +103,13 @@ class Plotly {
     }
     
     function setStyleDirectly(styleTable, callback = null) {
+        // Note that this overwrites the existing style table
         _persistentStyle = styleTable;
         _makeApiCall(MESSAGETYPE_STYLE, _persistentStyle, callback);
     }
     
     function setLayoutDirectly(layoutTable, callback = null) {
+        // Note that this overwrites the existing layout table
         _persistentLayout = layoutTable;
         _makeApiCall(MESSAGETYPE_LAYOUT, _persistentLayout, callback);
     }
