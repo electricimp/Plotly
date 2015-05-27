@@ -14,11 +14,9 @@ class Plotly {
     static PLOTLY_ENDPOINT = "https://plot.ly/clientresp";
     static PLOTLY_PLATFORM = "electricimp"
     
-    static MessageType = {
-        plot = "plot",
-        style = "style",
-        layout = "layout"
-    }
+    static MESSAGETYPE_PLOT = "plot";
+    static MESSAGETYPE_STYLE = "style";
+    static MESSAGETYPE_LAYOUT = "layout";
 
     _url = null;
     _username = null;
@@ -51,7 +49,7 @@ class Plotly {
             });
         };
 
-        _makeApiCall(MessageType.plot, plotlyInput, callback);
+        _makeApiCall(MESSAGETYPE_PLOT, plotlyInput, callback);
     }
     
     function getUrl() {
@@ -59,12 +57,12 @@ class Plotly {
     }
     
     function post(dataObjs, callback = null) {;
-        _makeApiCall(MessageType.plot, dataObjs, callback);
+        _makeApiCall(MESSAGETYPE_PLOT, dataObjs, callback);
     }
     
     function setTitle(title, callback = null) {
         _persistentLayout["title"] <- title;
-        _makeApiCall(MessageType.layout, _persistentLayout, callback);
+        _makeApiCall(MESSAGETYPE_LAYOUT, _persistentLayout, callback);
     }
     
     function setAxisTitles(xAxisTitle, yAxisTitle, callback = null) {
@@ -74,7 +72,7 @@ class Plotly {
         if(yAxisTitle != null && yAxisTitle.len() > 0) {
             _persistentLayout["yaxis"]["title"] <- yAxisTitle;
         }
-        _makeApiCall(MessageType.layout, _persistentLayout, callback);
+        _makeApiCall(MESSAGETYPE_LAYOUT, _persistentLayout, callback);
     }
     
     function addSecondYAxis(axisTitle, traces, callback = null) {
@@ -88,7 +86,7 @@ class Plotly {
                     trace["yaxis"] <- "y2";
                 }
             }
-            _makeApiCall(MessageType.layout, _persistentLayout, 
+            _makeApiCall(MESSAGETYPE_PLOT, _persistentLayout, 
                 function(response1, plot){
                     setStyleDirectly(_persistentStyle, function(response2, plot) {
                         if(callback != null){
@@ -103,12 +101,12 @@ class Plotly {
     
     function setStyleDirectly(styleTable, callback = null) {
         _persistentStyle = styleTable;
-        _makeApiCall(MessageType.style, _persistentStyle, callback);
+        _makeApiCall(MESSAGETYPE_STYLE, _persistentStyle, callback);
     }
     
     function setLayoutDirectly(layoutTable, callback = null) {
         _persistentLayout = layoutTable;
-        _makeApiCall(MessageType.layout, _persistentLayout, callback);
+        _makeApiCall(MESSAGETYPE_LAYOUT, _persistentLayout, callback);
     }
     
 
