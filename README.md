@@ -10,9 +10,9 @@ To see working examples of this library's in use, look at the [Fully-Featured](e
 
 ### Callbacks
 Almost all methods in this class (including the constructor) take an optional *callback* argument.
-This is a function that takes arguments *response* and *plot*, where *response* is a table representing a response from the Plotly servers and *plot* is a reference to the plot object.  The *response* object mirrors that provided in the callback to [httprequest.sendasync()](https://electricimp.com/docs/api/httprequest/sendasync/) with the addition of a *decoded* field that contains the JSON body of the response in a Squirrel table.
+This is a function that takes arguments *error*, *response*, and *decoded*, where error is a string (or null if no error occured), *response* is a table representing a response from the Plotly servers and *decoded* is a table representing the JSON object returned by the Plotly servers.  The *response* object mirrors that provided in the callback to [httprequest.sendasync()](https://electricimp.com/docs/api/httprequest/sendasync/).  Make sure to check the *error* argument before using either *response* or *decoded*.
 
-**Note that while the constructor will return immediately, it is only safe to operate on the resulting object once the callback has been called.**  The *plot* argument to the callback is provided for this purpose.  It is also the user's responsibility to ensure at this step that the construction has succeeded by checking the HTTP response code and/or Plotly response messages.
+**Note that while the constructor will return immediately, it is only safe to operate on the resulting object once the callback has been called.**  It is the user's responsibility to ensure at this step that the construction has succeeded by checking the HTTP response code and/or Plotly response messages.
 
 ## Constructor: Plotly(*userName, userKey, FileName, worldReadable, traces [, callback]*)
 

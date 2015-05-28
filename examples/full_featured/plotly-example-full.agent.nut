@@ -26,10 +26,7 @@ class Plotly {
     _persistentLayout = null;
     _persistentStyle = null;
 
-    
-    function constructor(username, userKey,
-                         filename, worldReadable, traces, 
-                         callback = null) {
+    function constructor(username, userKey, filename, worldReadable, traces, callback = null) {
         _url = "";
         _username = username;
         _userKey = userKey;
@@ -38,6 +35,8 @@ class Plotly {
         _persistentLayout = {"xaxis" : {}, "yaxis" : {}};
         _persistentStyle = [];
         local plotlyInput = [];
+        
+        // Setup blank traces to be appended to later
         foreach(trace in traces) {
             plotlyInput.append({
                 "x" : [],
@@ -47,7 +46,7 @@ class Plotly {
             _persistentStyle.append({
                 "name" : trace  
             });
-        };
+        }
 
         _makeApiCall(MESSAGETYPE_PLOT, plotlyInput, callback);
     }
@@ -76,46 +75,84 @@ class Plotly {
     }
     
     function addSecondYAxis(axisTitle, traces, callback = null) {
-            _persistentLayout["yaxis2"] <-  {
-                                                "title" : axisTitle,
-                                                "side" : "right",
-                                                "overlaying" : "y"
-                                            };
+            _persistentLayout["yaxis2"] <- {
+                "title" : axisTitle,
+                "side" : "right",
+                "overlaying" : "y"
+            };
+            // Search for requested traces in style table
             foreach(trace in _persistentStyle) {
                 if(traces.find(trace["name"]) != null) {
                     trace["yaxis"] <- "y2";
                 }
             }
-            _makeApiCall(MESSAGETYPE_PLOT, _persistentLayout, 
-                function(response1, plot){
-                    setStyleDirectly(_persistentStyle, function(response2, plot) {
-                        if(callback != null){
-                            local returnedResponse = 
-                                response1.statuscode > response2.statuscode ? 
-                                response1 : response2;
-                            callback(returnedResponse, plot);
-                        }
-                    });
-                });
+            local secondAxisCallback = _getSecondAxisLayoutCallback(callback).bindenv(this);
+            _makeApiCall(MESSAGETYPE_LAYOUT, _persistentLayout, secondAxisCallback);
     }
     
     function setStyleDirectly(styleTable, callback = null) {
+        // Note that this overwrites the existing style table
         _persistentStyle = styleTable;
         _makeApiCall(MESSAGETYPE_STYLE, _persistentStyle, callback);
     }
     
     function setLayoutDirectly(layoutTable, callback = null) {
+        // Note that this overwrites the existing layout table
         _persistentLayout = layoutTable;
         _makeApiCall(MESSAGETYPE_LAYOUT, _persistentLayout, callback);
     }
     
 
     /******************** PRIVATE FUNCTIONS (DO NOT CALL) ********************/
+    function _getSecondAxisStyleCallback(err1, response1, parsed1, userCallback) {
+        return function(err2, response2, parsed2) {
+            if(userCallback != null) {
+                // Since adding a second y-axis requires two API calls, pass the "worse" response into the user callback
+                local returnedResponse = response1.statuscode > response2.statuscode ? response1 : response2;
+                local returnedErr = response1.statuscode > response2.statuscode ? err1 : err2;
+                local returnedParsed = response1.statuscode > response2.statuscode ? parsed1 : parsed2;
+                imp.wakeup(0, @() userCallback(returnedErr, returnedResponse, returnedParsed));
+            }
+        }
+    }
+    
+    function _getSecondAxisLayoutCallback(userCallback) {
+        return function(err1, response1, parsed1) {
+            local callback =  _getSecondAxisStyleCallback(err1, response1, parsed1, userCallback);
+            setStyleDirectly(_persistentStyle, callback);
+        }
+    }
+    
+    function _getApiRequestCallback(userCallback) {
+        return function(response){
+            local error = null;
+            local responseTable = null;
+            if(response.statuscode == 200) {
+                try{
+                    responseTable = http.jsondecode(response.body);
+                    if("url" in responseTable && responseTable.url.len() > 0) {
+                        _url = responseTable.url;
+                    }
+                    if("error" in responseTable && responseTable.error.len() > 0) {
+                        error = responseTable.error;   
+                    }
+                } catch(exception) {
+                    error = "Could not decode Plotly response";
+                }
+            } else {
+                error = "HTTP Response Code " + response.statuscode;
+            }
+            if(userCallback != null) {
+                imp.wakeup(0, @() userCallback(error, response, responseTable));
+            }
+        }
+    }
+    
     function _makeApiCall(type, requestArgs, userCallback) {
         local requestKwargs = {
-                "filename" : _filename,
-                "fileopt" : "extend",
-                "world_readable" : _worldReadable
+            "filename" : _filename,
+            "fileopt" : "extend",
+            "world_readable" : _worldReadable
         };
         
         local requestData = {
@@ -130,31 +167,18 @@ class Plotly {
         local requestString = http.urlencode(requestData);
         local request = http.post(PLOTLY_ENDPOINT, {}, requestString); 
         
-        local requestCallback = function(response) {
-            if(response.statuscode == 200) {
-                local responseTable = null;
-                try{
-                    responseTable = http.jsondecode(response.body);
-                    if(responseTable.url.len() > 0) {
-                        _url = responseTable.url;
-                    }
-                } catch(exception){
-                    server.error("Could not decode Plotly response.");
-                }
-                response["decoded"] <- responseTable;
-            }
-            if(userCallback != null){
-                userCallback(response, this);
-            }
-        };
-        
-        request.sendasync(requestCallback.bindenv(this));
+        local apiRequestCallback = _getApiRequestCallback(userCallback);
+        request.sendasync(apiRequestCallback.bindenv(this));
     }
 }
 
-function loggerCallback(response, plot){
+function loggerCallback(error, response, decoded) {
+    if(error == null) {
         server.log(response.body);
+    } else {
+        server.log(error);
     }
+}
 
 function postToPlotly(reading) {
     local timestamp = plot1.getPlotlyTimestamp();
@@ -181,50 +205,71 @@ function postToPlotly(reading) {
         }], loggerCallback);
 }
 
-server.log("Rebooting");
-local constructorCallback = function(response, plot){
+local constructorCallback = function(error, response, decoded) {
     
-    device.on("reading", postToPlotly);
+    if(error == null) {
+        device.on("reading", postToPlotly);
 
-    plot.setTitle("Env Tail Data", function(response, plot){
-        plot.setAxisTitles("time", "Climate", function(response, plot){
-            local style =
-            [
-                {
-                    "name" : "Temperature",
-                    "type": "scatter",
-                    "marker": {"symbol": "square", "color": "purple"}
+        plot1.setTitle("Env Tail Data", function(error, response, decoded) {
+            
+            if(error == null) {
+                plot1.setAxisTitles("time", "Climate", function(error, response, decoded) {
                     
-                },
-                {
-                    "name" : "Pressure",
-                    "type": "scatter",
-                    "marker": {"symbol": "circle", "color": "red"}
-                    
-                },
-                {
-                    "name" : "Humidity",
-                    "type": "scatter", 
-                    "marker": {"symbol": "square", "color": "blue"}
-                    
-                },
-                {
-                    "name" : "Lux",
-                    "type": "scatter",
-                    "marker": {"symbol": "triangle", "color": "green"}
-                    
-                }
-            ];
-            plot.setStyleDirectly(style, function(response, plot){
-                plot.addSecondYAxis("Light", ["Lux"], function(response, plot){
-                    server.log("See plot at " + plot.getUrl()); 
+                    if(error == null) {
+                        local style =
+                        [
+                            {
+                                "name" : "Temperature",
+                                "type": "scatter",
+                                "marker": {"symbol": "square", "color": "purple"}
+                                
+                            },
+                            {
+                                "name" : "Pressure",
+                                "type": "scatter",
+                                "marker": {"symbol": "circle", "color": "red"}
+                                
+                            },
+                            {
+                                "name" : "Humidity",
+                                "type": "scatter", 
+                                "marker": {"symbol": "square", "color": "blue"}
+                                
+                            },
+                            {
+                                "name" : "Lux",
+                                "type": "scatter",
+                                "marker": {"symbol": "triangle", "color": "green"}
+                                
+                            }
+                        ];
+                        plot1.setStyleDirectly(style, function(error, response, decoded) {
+                            
+                            if(error == null) {
+                                plot1.addSecondYAxis("Light", ["Lux"], function(error, response, decoded) {
+                                    
+                                    if(error == null){
+                                        server.log("See plot at " + plot1.getUrl()); 
+                                    } else {
+                                        server.log(error);
+                                    }
+                                });
+                            } else {
+                                server.log(error);
+                            }
+                        });
+                    } else {
+                        server.log(error);
+                    }
                 });
-            });
+            } else {
+                server.log(error);
+            }
         });
-        
-    });
+    } else {
+        server.log(error);
+    }
 }
 
 local traces = ["Temperature", "Pressure", "Humidity", "Lux"];
-plot1 <- Plotly("my_name", "my_api_key", "my_file_name", 
-                true, traces, constructorCallback);
+plot1 <- Plotly("my_username", "my_api_key", "my_file_name", true, traces, constructorCallback);
