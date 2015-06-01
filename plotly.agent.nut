@@ -111,7 +111,9 @@ class Plotly {
                 local returnedResponse = response1.statuscode > response2.statuscode ? response1 : response2;
                 local returnedErr = response1.statuscode > response2.statuscode ? err1 : err2;
                 local returnedParsed = response1.statuscode > response2.statuscode ? parsed1 : parsed2;
-                imp.wakeup(0, @() userCallback(returnedErr, returnedResponse, returnedParsed));
+                imp.wakeup(0, function() {
+                    userCallback(returnedErr, returnedResponse, returnedParsed);
+                });
             }
         }
     }
@@ -143,7 +145,9 @@ class Plotly {
                 error = "HTTP Response Code " + response.statuscode;
             }
             if(userCallback != null) {
-                imp.wakeup(0, @() userCallback(error, response, responseTable));
+                imp.wakeup(0, function() {
+                    userCallback(error, response, responseTable);
+                });
             }
         }
     }

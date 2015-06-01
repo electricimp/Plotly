@@ -111,7 +111,9 @@ class Plotly {
                 local returnedResponse = response1.statuscode > response2.statuscode ? response1 : response2;
                 local returnedErr = response1.statuscode > response2.statuscode ? err1 : err2;
                 local returnedParsed = response1.statuscode > response2.statuscode ? parsed1 : parsed2;
-                imp.wakeup(0, @() userCallback(returnedErr, returnedResponse, returnedParsed));
+                imp.wakeup(0, function() {
+                    userCallback(returnedErr, returnedResponse, returnedParsed);
+                });
             }
         }
     }
@@ -143,7 +145,9 @@ class Plotly {
                 error = "HTTP Response Code " + response.statuscode;
             }
             if(userCallback != null) {
-                imp.wakeup(0, @() userCallback(error, response, responseTable));
+                imp.wakeup(0, function() {
+                    userCallback(error, response, responseTable);
+                });
             }
         }
     }
@@ -207,68 +211,78 @@ function postToPlotly(reading) {
 
 local constructorCallback = function(error, response, decoded) {
     
-    if(error == null) {
-        device.on("reading", postToPlotly);
-
-        plot1.setTitle("Env Tail Data", function(error, response, decoded) {
-            
-            if(error == null) {
-                plot1.setAxisTitles("time", "Climate", function(error, response, decoded) {
-                    
-                    if(error == null) {
-                        local style =
-                        [
-                            {
-                                "name" : "Temperature",
-                                "type": "scatter",
-                                "marker": {"symbol": "square", "color": "purple"}
-                                
-                            },
-                            {
-                                "name" : "Pressure",
-                                "type": "scatter",
-                                "marker": {"symbol": "circle", "color": "red"}
-                                
-                            },
-                            {
-                                "name" : "Humidity",
-                                "type": "scatter", 
-                                "marker": {"symbol": "square", "color": "blue"}
-                                
-                            },
-                            {
-                                "name" : "Lux",
-                                "type": "scatter",
-                                "marker": {"symbol": "triangle", "color": "green"}
-                                
-                            }
-                        ];
-                        plot1.setStyleDirectly(style, function(error, response, decoded) {
-                            
-                            if(error == null) {
-                                plot1.addSecondYAxis("Light", ["Lux"], function(error, response, decoded) {
-                                    
-                                    if(error == null){
-                                        server.log("See plot at " + plot1.getUrl()); 
-                                    } else {
-                                        server.log(error);
-                                    }
-                                });
-                            } else {
-                                server.log(error);
-                            }
-                        });
-                    } else {
-                        server.log(error);
-                    }
-                });
-            } else {
-                server.log(error);
-            }
-        });
-    } else {
+    
+    if(error != null) {
         server.log(error);
+        return;
     }
+    
+    device.on("reading", postToPlotly);
+
+    plot1.setTitle("Env Tail Data", function(error, response, decoded) {
+    
+        if(error != null) {
+            server.log(error);
+            return;
+        }
+        
+        plot1.setAxisTitles("time", "Climate", function(error, response, decoded) {
+            
+            if(error != null) {
+                server.log(error);
+                return;
+            }
+            
+            local style =
+            [
+                {
+                    "name" : "Temperature",
+                    "type": "scatter",
+                    "marker": {"symbol": "square", "color": "purple"}
+                    
+                },
+                {
+                    "name" : "Pressure",
+                    "type": "scatter",
+                    "marker": {"symbol": "circle", "color": "red"}
+                    
+                },
+                {
+                    "name" : "Humidity",
+                    "type": "scatter", 
+                    "marker": {"symbol": "square", "color": "blue"}
+                    
+                },
+                {
+                    "name" : "Lux",
+                    "type": "scatter",
+                    "marker": {"symbol": "triangle", "color": "green"}
+                    
+                }
+            ];
+            plot1.setStyleDirectly(style, function(error, response, decoded) {
+               
+                if(error != null) {
+                    server.log(error);
+                    return;
+                }
+               
+                plot1.addSecondYAxis("Light", ["Lux"], function(error, response, decoded) {
+               
+                    if(error != null) {
+                        server.log(error);
+                        return;
+                    }
+                    
+                    server.log("See plot at " + plot1.getUrl()); 
+               
+                });
+                
+            });
+            
+        });
+
+    });
 }
 
 local traces = ["Temperature", "Pressure", "Humidity", "Lux"];
