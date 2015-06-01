@@ -4,6 +4,8 @@
 
 class Plotly {
     
+    static version = [1, 0, 0];
+    
     static function getPlotlyTimestamp(providedTimestamp = null) {
         local timestamp = providedTimestamp == null ? date() : date(providedTimestamp);
         return format("%04i-%02i-%02i %02i:%02i:%02i",
@@ -164,6 +166,7 @@ class Plotly {
             "key" : _userKey,
             "origin" : type,  
             "platform" : PLOTLY_PLATFORM,
+            "version" : format("%i.%i.%i", version[0], version[1], version[2]),
             "args" : http.jsonencode(requestArgs),
             "kwargs" : http.jsonencode(requestKwargs)
         };
