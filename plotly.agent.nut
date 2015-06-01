@@ -3,19 +3,19 @@
 // http://opensource.org/licenses/MIT
 
 class Plotly {
-    
+
     static version = [1, 0, 0];
-    
+
     static function getPlotlyTimestamp(providedTimestamp = null) {
         local timestamp = providedTimestamp == null ? date() : date(providedTimestamp);
         return format("%04i-%02i-%02i %02i:%02i:%02i",
             timestamp.year, timestamp.month, timestamp.day,
             timestamp.hour, timestamp.min, timestamp.sec);
     }
-    
+
     static PLOTLY_ENDPOINT = "https://plot.ly/clientresp";
     static PLOTLY_PLATFORM = "electricimp"
-    
+
     static MESSAGETYPE_PLOT = "plot";
     static MESSAGETYPE_STYLE = "style";
     static MESSAGETYPE_LAYOUT = "layout";
@@ -37,7 +37,7 @@ class Plotly {
         _persistentLayout = {"xaxis" : {}, "yaxis" : {}};
         _persistentStyle = [];
         local plotlyInput = [];
-        
+
         // Setup blank traces to be appended to later
         foreach(trace in traces) {
             plotlyInput.append({
@@ -46,26 +46,26 @@ class Plotly {
                 "name" : trace
             });
             _persistentStyle.append({
-                "name" : trace  
+                "name" : trace
             });
         }
 
         _makeApiCall(MESSAGETYPE_PLOT, plotlyInput, callback);
     }
-    
+
     function getUrl() {
         return _url;
     }
-    
+
     function post(dataObjs, callback = null) {;
         _makeApiCall(MESSAGETYPE_PLOT, dataObjs, callback);
     }
-    
+
     function setTitle(title, callback = null) {
         _persistentLayout["title"] <- title;
         _makeApiCall(MESSAGETYPE_LAYOUT, _persistentLayout, callback);
     }
-    
+
     function setAxisTitles(xAxisTitle, yAxisTitle, callback = null) {
         if(xAxisTitle != null && xAxisTitle.len() > 0) {
             _persistentLayout["xaxis"]["title"] <- xAxisTitle;
@@ -75,7 +75,7 @@ class Plotly {
         }
         _makeApiCall(MESSAGETYPE_LAYOUT, _persistentLayout, callback);
     }
-    
+
     function addSecondYAxis(axisTitle, traces, callback = null) {
             _persistentLayout["yaxis2"] <- {
                 "title" : axisTitle,
@@ -91,19 +91,19 @@ class Plotly {
             local secondAxisCallback = _getSecondAxisLayoutCallback(callback).bindenv(this);
             _makeApiCall(MESSAGETYPE_LAYOUT, _persistentLayout, secondAxisCallback);
     }
-    
+
     function setStyleDirectly(styleTable, callback = null) {
         // Note that this overwrites the existing style table
         _persistentStyle = styleTable;
         _makeApiCall(MESSAGETYPE_STYLE, _persistentStyle, callback);
     }
-    
+
     function setLayoutDirectly(layoutTable, callback = null) {
         // Note that this overwrites the existing layout table
         _persistentLayout = layoutTable;
         _makeApiCall(MESSAGETYPE_LAYOUT, _persistentLayout, callback);
     }
-    
+
 
     /******************** PRIVATE FUNCTIONS (DO NOT CALL) ********************/
     function _getSecondAxisStyleCallback(err1, response1, parsed1, userCallback) {
@@ -119,14 +119,14 @@ class Plotly {
             }
         }
     }
-    
+
     function _getSecondAxisLayoutCallback(userCallback) {
         return function(err1, response1, parsed1) {
             local callback =  _getSecondAxisStyleCallback(err1, response1, parsed1, userCallback);
             setStyleDirectly(_persistentStyle, callback);
         }
     }
-    
+
     function _getApiRequestCallback(userCallback) {
         return function(response){
             local error = null;
@@ -138,7 +138,7 @@ class Plotly {
                         _url = responseTable.url;
                     }
                     if("error" in responseTable && responseTable.error.len() > 0) {
-                        error = responseTable.error;   
+                        error = responseTable.error;
                     }
                 } catch(exception) {
                     error = "Could not decode Plotly response";
@@ -153,27 +153,27 @@ class Plotly {
             }
         }
     }
-    
+
     function _makeApiCall(type, requestArgs, userCallback) {
         local requestKwargs = {
             "filename" : _filename,
             "fileopt" : "extend",
             "world_readable" : _worldReadable
         };
-        
+
         local requestData = {
             "un" : _username,
             "key" : _userKey,
-            "origin" : type,  
+            "origin" : type,
             "platform" : PLOTLY_PLATFORM,
             "version" : format("%i.%i.%i", version[0], version[1], version[2]),
             "args" : http.jsonencode(requestArgs),
             "kwargs" : http.jsonencode(requestKwargs)
         };
-        
+
         local requestString = http.urlencode(requestData);
-        local request = http.post(PLOTLY_ENDPOINT, {}, requestString); 
-        
+        local request = http.post(PLOTLY_ENDPOINT, {}, requestString);
+
         local apiRequestCallback = _getApiRequestCallback(userCallback);
         request.sendasync(apiRequestCallback.bindenv(this));
     }

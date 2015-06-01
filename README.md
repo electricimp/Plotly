@@ -20,7 +20,7 @@ To create a plot, you need to call the constructor with your Plotly authenticati
 
 To find your *userName* and *userKey*, go to the Plotly [API settings page](https://plot.ly/settings/api) and copy the Username and API key as highlighted below.  Note that the *userKey* is **not** your password, but is an API key that Plotly provides for developers.  Whenever you cycle your API key (e.g. by clicking "Generate a new key"), you will have to update this value in your code as well.
 
-![Plotly settings screenshot] (images/plotly_user_settings.png)
+![Plotly settings screenshot](images/plotly_user_settings.png)
 
 Let *fileName* be the file name you would like this graph to have in your Plotly account.
 

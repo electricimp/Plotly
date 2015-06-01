@@ -44,15 +44,15 @@ led.configure(DIGITAL_OUT, 0)
 function getReadings()
 {
     // Flash the LED
-            
+
     flashLed()
-            
+
     // Get the light level
-    
+
     local lux = lightSensor.read()
-    
+
     // Day or night?
-    
+
     if (lux > 300)
     {
         data.day = true
@@ -61,35 +61,35 @@ function getReadings()
     {
         data.day = false
     }
-    
-    // Get the pressure. This is an asynchronous call, so we need to 
-    // pass a function that will be called only when the sensor 
+
+    // Get the pressure. This is an asynchronous call, so we need to
+    // pass a function that will be called only when the sensor
     // has a value for us.
-    
+
     pressureSensor.read(function(pressure) {
-        
+
         data.pressure = pressure
-        
+
         // Now get the temperature and humidity. Again, this is an
         // asynchronous call: we need to a pass a function to be
         // called when the data has been returned. This time
         // the callback function also has to bundle the data
         // and send it to the agent. Then it puts the device into
         // deep sleep until it's next time for a reading.
-        
+
         tempHumidSensor.read(function(reading) {
-            
+
             data.temp = reading.temperature
             data.humid = reading.humidity
-            
+
             // Send the data to the agent
-            
+
             agent.send("reading", data)
 
             // Put the imp to sleep for five minutes BUT
             // only do so when impOS has done all it needs to
             // do and has gone into an idle state
-            
+
             imp.onidle(function() { server.sleepfor(300) } )
         })
     })
@@ -98,15 +98,15 @@ function getReadings()
 function flashLed()
 {
     // Turn the LED on (write a HIGH value)
-    
+
     led.write(1)
-    
+
     // Pause for half a second
-    
+
     imp.sleep(0.5)
-    
+
     // Turn the LED off
-    
+
     led.write(0)
 }
 
