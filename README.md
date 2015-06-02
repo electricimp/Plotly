@@ -4,6 +4,8 @@ This library wraps the [Plotly](https://plot.ly/) [REST API] (https://plot.ly/re
 
 This class allows for simple creation of time-series data graphs while exposing access for styling graphs using all features of the Plotly API.  Note that this library requires creation of a Plotly account.
 
+**To add this library to your project, add** `#require "Plotly.class.nut:1.0.0"` **to the top of your agent code.**
+
 ### Examples
 
 To see working examples of this library's in use, look at the [Fully-Featured](examples/full_featured) and [Minimal](examples/minimal) Plotly projects.
@@ -29,6 +31,8 @@ Let *worldReadable* be true if you would like this graph to be accessible to any
 Let *traces* be a list of the data point names you would like to graph.  Each Plotly graph can display many concurrent values known as traces, but you must list them all here before plotting them.
 
 ```squirrel
+#require "Plotly.class.nut:1.0.0"
+
 local callback = function(response, plot){
     server.log(response.body);
     server.log("See plot at " + plot.getUrl());
