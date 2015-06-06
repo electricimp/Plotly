@@ -8,7 +8,7 @@ This class allows for simple creation of time-series data graphs while exposing 
 
 ### Examples
 
-To see working examples of this library's in use, look at the [Fully-Featured](examples/full_featured) and [Minimal](examples/minimal) Plotly projects.
+To see working examples of this library in use, look at the [Fully-Featured](examples/full_featured) and [Minimal](examples/minimal) Plotly projects.
 
 ### Callbacks
 Almost all methods in this class (including the constructor) take an optional *callback* argument.
