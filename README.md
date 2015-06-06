@@ -40,12 +40,12 @@ local callback = function(error, response, decoded){
     }
     server.log("See plot at " + myPlot.getUrl());
 }
-myPlot <- Plot("<YOUR_USERNAME>", "<YOUR_API_KEY>", "weather_data", true, ["temperature", "inside_humidity", "outside_humidity"], callback);
+myPlot <- Plotly("<YOUR_USERNAME>", "<YOUR_API_KEY>", "weather_data", true, ["temperature", "inside_humidity", "outside_humidity"], callback);
 ```
 
 ## Class Methods
 
-## plot.getUrl()
+## Plotly.getUrl()
 
 Returns a string with the URL of the graph that this object generates.  Note that if *worldReadable* was set to false in the constructor, this link will only be viewable when logged into Plotly.
 
@@ -53,7 +53,7 @@ Returns a string with the URL of the graph that this object generates.  Note tha
 local plotUrl = myPlot.getUrl();
 ```
 
-## plot.setTitle(*title [, callback]*)
+## Plotly.setTitle(*title [, callback]*)
 
 Sets the title that will be displayed on this graph.
 
@@ -61,7 +61,7 @@ Sets the title that will be displayed on this graph.
 myPlot.setTitle("Weather at Station 7");
 ```
 
-## plot.setAxisTitles(*xAxisTitle, yAxisTitle*)
+## Plotly.setAxisTitles(*xAxisTitle, yAxisTitle*)
 
 Sets the labels that will be applied to the standard x- and y-axes on this graph.  If either argument is null or empty, that axis title will not be changed.
 
@@ -69,7 +69,7 @@ Sets the labels that will be applied to the standard x- and y-axes on this graph
 myPlot.setAxisTitles("Time", "Temperature (°F)");
 ```
 
-## plot.addSecondYAxis(*axisTitle, traces [, callback]*)
+## Plotly.addSecondYAxis(*axisTitle, traces [, callback]*)
 
 Adds a second y-axis on the right side of the graph and assigns the specified traces to it.  *traces* should be a list of the string names of traces as passed in the *traces* argument to the constructor.
 
@@ -77,7 +77,7 @@ Adds a second y-axis on the right side of the graph and assigns the specified tr
 myPlot.addSecondYAxis("Humidity (%)", ["inside_humidity", "outside_humidity"]);
 ```
 
-## plot.setStyleDirectly(*styleTable [, callback]*)
+## Plotly.setStyleDirectly(*styleTable [, callback]*)
 
 Sets the style of the graph by passing a description directly to the Plotly API.  This allows for advanced styling options that this library does not have specific methods for.
 
