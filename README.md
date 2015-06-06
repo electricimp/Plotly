@@ -33,9 +33,12 @@ Let *traces* be a list of the data point names you would like to graph.  Each Pl
 ```squirrel
 #require "Plotly.class.nut:1.0.0"
 
-local callback = function(response, plot){
-    server.log(response.body);
-    server.log("See plot at " + plot.getUrl());
+local callback = function(error, response, decoded){
+    if (error) {
+        server.log("Got an error: " + error);
+        return;
+    }
+    server.log("See plot at " + myPlot.getUrl());
 }
 myPlot <- Plot("<YOUR_USERNAME>", "<YOUR_API_KEY>", "weather_data", true, ["temperature", "inside_humidity", "outside_humidity"], callback);
 ```
