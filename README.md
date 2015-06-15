@@ -116,7 +116,7 @@ Note that there are several caveats to using this method:
 - This will entirely overwrite layout parameters previously set using methods like `AddSecondAxis`, `setTitle`, or `setLayoutDirectly`.
 - If there is an error in formatting *layoutTable*, an error may be passed to *callback* or the call may silently fail.
 
-## Plotly.plot(*dataObjs [, callback]*)
+## Plotly.post(*dataObjs [, callback]*)
 
 Appends data to the Plotly graph.  This method takes an array *dataObjs* of Squirrel tables in the following form:
 
