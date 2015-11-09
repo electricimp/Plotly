@@ -9,7 +9,7 @@ class Plotly {
     static function getPlotlyTimestamp(providedTimestamp = null) {
         local timestamp = providedTimestamp == null ? date() : date(providedTimestamp);
         return format("%04i-%02i-%02i %02i:%02i:%02i",
-            timestamp.year, timestamp.month, timestamp.day,
+            timestamp.year, timestamp.month + 1, timestamp.day,
             timestamp.hour, timestamp.min, timestamp.sec);
     }
 
