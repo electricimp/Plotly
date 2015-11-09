@@ -4,12 +4,12 @@
 
 class Plotly {
 
-    static version = [1, 0, 0];
+    static version = [1, 0, 1];
 
     static function getPlotlyTimestamp(providedTimestamp = null) {
         local timestamp = providedTimestamp == null ? date() : date(providedTimestamp);
         return format("%04i-%02i-%02i %02i:%02i:%02i",
-            timestamp.year, timestamp.month, timestamp.day,
+            timestamp.year, timestamp.month + 1, timestamp.day,
             timestamp.hour, timestamp.min, timestamp.sec);
     }
 
