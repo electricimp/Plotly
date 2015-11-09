@@ -4,7 +4,7 @@
 
 class Plotly {
 
-    static version = [1, 0, 0];
+    static version = [1, 0, 1];
 
     static function getPlotlyTimestamp(providedTimestamp = null) {
         local timestamp = providedTimestamp == null ? date() : date(providedTimestamp);
