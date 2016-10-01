@@ -50,6 +50,7 @@ function getReadings()
     // Get the light level
 
     local lux = lightSensor.read()
+    data.lux = lux
 
     // Day or night?
 
