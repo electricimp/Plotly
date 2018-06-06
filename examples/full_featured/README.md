@@ -1,10 +1,10 @@
 # Full-Featured Plotly Library Example
 
-This example uses all features of the Plotly library to plot data generated from an [Electric Imp Env Tail](https://electricimp.com/docs/tails/env/).
+This example uses all features of the Plotly library to plot data generated from an Electric Imp Env Tail.
 
 ## Device
 
-The Device code is taken directly from the [Weather Station project](https://electricimp.com/docs/tails/weatherstation/) and sends a table with readings from all of its sensors to the Agent every 5 minutes.
+The Device code is taken directly from the Weather Station project and sends a table with readings from all of its sensors to the Agent every 5 minutes.
 
 ## Agent
 
