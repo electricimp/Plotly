@@ -1,5 +1,9 @@
+// Agent Code
+
+// Imports
 #require "Plotly.class.nut:1.0.0"
 
+// Define the function that will be triggered with the Plotly response
 function loggerCallback(error, response, decoded) {
     if (error == null) {
         server.log(response.body);
@@ -8,6 +12,7 @@ function loggerCallback(error, response, decoded) {
     }
 }
 
+// Define the function that will send data to plotly
 function postToPlotly(reading) {
     local timestamp = plot1.getPlotlyTimestamp();
     plot1.post([
@@ -27,7 +32,6 @@ function postToPlotly(reading) {
 }
 
 local constructorCallback = function(error, response, decoded) {
-
     if (error != null) {
         server.log(error);
         return;
@@ -81,5 +85,6 @@ local constructorCallback = function(error, response, decoded) {
     });
 }
 
+// Runtime start
 local traces = ["Temperature", "Pressure", "Humidity", "Lux"];
 plot1 <- Plotly("my_username", "my_api_key", "my_file_name", true, traces, constructorCallback);
