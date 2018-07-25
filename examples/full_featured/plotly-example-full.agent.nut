@@ -1,7 +1,7 @@
 // Agent Code
 
 // Imports
-#require "Plotly.class.nut:1.0.0"
+#require "Plotly.class.nut:1.0.1"
 
 // Define the function that will be triggered with the Plotly response
 function loggerCallback(error, response, decoded) {
