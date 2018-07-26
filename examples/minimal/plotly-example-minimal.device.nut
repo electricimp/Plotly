@@ -41,6 +41,7 @@ function getReadings() {
     flashLed();
 
     // Get the light level
+
     local lux = lightSensor.read();
     data.lux = lux;
 
